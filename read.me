@@ -1,0 +1,81 @@
+# RDP Manager - Technical Requirements & Build Instructions
+
+## Overview
+A Windows desktop application for managing RDP connections. Built with FastAPI (backend), Svelte (frontend), and Electron (desktop wrapper).
+
+## Features
+- Create, edit, and delete RDP connections
+- Store IP address, username, and password
+- Launch default Windows RDP client with selected credentials
+- Automate password entry if prompted
+
+## Stack
+- Backend: FastAPI (Python)
+- Frontend: Svelte (JavaScript)
+- Desktop: Electron (Node.js)
+
+## Folder Structure
+- backend/        # FastAPI backend
+- frontend/       # Svelte frontend
+- desktop/        # Electron wrapper
+- main.py         # Entry point (optional)
+- test_steps.py   # Test scripts
+- pip.ini         # Python config
+
+## Build Instructions
+
+### 1. Backend Setup
+- Install Python 3.11+
+- Install FastAPI & Uvicorn:
+  ```powershell
+  pip install fastapi uvicorn
+  ```
+- Run backend:
+  ```powershell
+  uvicorn backend.main:app --reload
+  ```
+
+### 2. Frontend Setup
+- Install Node.js (v18+ recommended)
+- Install dependencies:
+  ```powershell
+  cd frontend
+  npm install
+  npm run build
+  ```
+
+### 3. Desktop Wrapper (Electron)
+- Install Electron:
+  ```powershell
+  cd desktop
+  npm install electron
+  ```
+- Configure Electron to serve Svelte frontend and communicate with FastAPI backend
+
+### 4. Build to .exe
+- Use Electron Forge or Electron Builder:
+  ```powershell
+  npm install --save-dev @electron-forge/cli
+  npx electron-forge import
+  npm run make
+  ```
+- The .exe will be in the `out` or `dist` folder
+
+## RDP Automation
+- Use Python's `subprocess` to launch `mstsc.exe` with a generated `.rdp` file
+- Use `pyautogui` or similar to automate password entry if prompted
+
+## Security
+- Store credentials securely (consider encryption)
+- Do not log sensitive data
+
+## Testing
+- Manual and automated tests in `test_steps.py`
+
+## Requirements
+- Windows 10/11
+- Python 3.11+
+- Node.js 18+
+
+---
+For detailed setup, see each folder's README.

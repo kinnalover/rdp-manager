@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RDP Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./frontend/style.css">
+</head>
+<body>
+  <div class="container" id="mainPage">
+    <h1>RDP Manager</h1>
+    <div class="top-btn">
+      <button class="add-btn" onclick="showModal()">Add Connection</button>
+      <button class="add-btn green" style="margin-left:8px;" onclick="goToCredPage()">Manage Credentials</button>
+    </div>
+    <ul id="connections"></ul>
+  </div>
+  <div class="container" id="credPage" style="display:none;">
+    <h1>Credentials</h1>
+    <div class="top-btn">
+      <button class="add-btn" onclick="showCredModal()">Add Credentials</button>
+      <button class="add-btn purple" style="margin-left:8px;" onclick="goToMainPage()">Back to Connections</button>
+    </div>
+    <ul id="credList"></ul>
+  </div>
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <input id="ip" placeholder="IP Address" required>
+      <select id="usernameDropdown" required style="width:100%;margin-bottom:16px;padding:8px;font-size:16px;border-radius:8px;border:1px solid #dbe2ea;background:#f8fafc;color:#2d3a4b;appearance:none;box-shadow:0 2px 8px rgba(0,0,0,0.03);"></select>
+      <textarea id="description" placeholder="Description" rows="3" style="width:100%;margin-bottom:16px;padding:8px;font-size:16px;border-radius:8px;border:1px solid #dbe2ea;background:#f8fafc;color:#2d3a4b;resize:vertical;"></textarea>
+      <button onclick="saveConnection()" id="saveBtn">Save</button>
+      <button class="close-btn" onclick="hideModal()">Cancel</button>
+    </div>
+  </div>
+  <div class="modal" id="credModal">
+    <div class="modal-content">
+      <input id="credUsername" placeholder="Username" required>
+      <input id="credPassword" type="password" placeholder="Password" required>
+      <button onclick="saveCredentials()">Save Credentials</button>
+      <button class="close-btn" onclick="hideCredModal()">Cancel</button>
+    </div>
+  </div>
+  <div class="modal" id="editCredModal">
+    <div class="modal-content">
+      <h3 id="editCredTitle">Edit Password</h3>
+      <input id="editCredPassword" type="password" placeholder="New Password" required>
+      <button onclick="submitEditCredential()">Save</button>
+      <button class="close-btn" onclick="hideEditCredModal()">Cancel</button>
+    </div>
+  </div>
+  <script>
+    let connections = [];
+    let editingId = null;
+    let usernames = [];
+
+    function fetchConnections() {
+      fetch('/connections')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            connections = data;
+          } else if (Array.isArray(data.connections)) {
+            connections = data.connections;
+          } else {
+            connections = [];
+          }
+          renderConnections();
+        });
+    }
+
+    function fetchUsernames() {
+      fetch('/usernames')
+        .then(res => res.json())
+        .then(data => {
+          usernames = Array.isArray(data) ? data : [];
+          renderUsernameDropdown();
+          if (document.getElementById('credPage').style.display !== 'none') {
+            renderCredList();
+          }
+        });
+    }
+
+    function renderUsernameDropdown(selected) {
+      const dropdown = document.getElementById('usernameDropdown');
+      dropdown.innerHTML = '';
+      usernames.forEach(u => {
+        const option = document.createElement('option');
+        option.value = u;
+        option.textContent = u;
+        if (selected && selected === u) option.selected = true;
+        dropdown.appendChild(option);
+      });
+    }
+
+    function renderConnections() {
+      const ul = document.getElementById('connections');
+      ul.innerHTML = '';
+      connections.forEach(conn => {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.flexDirection = 'column';
+        li.innerHTML = `<div class="row" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div class="info" style="cursor:pointer;"><b>${conn.ip}</b> (${conn.username})</div>
+          <div class="actions">
+            <button class="connect-btn">Connect</button>
+            <button class="edit-btn">Edit</button>
+            <button class="delete delete-btn">Delete</button>
+          </div>
+        </div>
+        <div class="desc-row" style="display:none;margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.03);color:#2d3a4b;font-size:15px;width:100%;"></div>`;
+        // Add event listeners
+        li.querySelector('.connect-btn').addEventListener('click', () => connect(conn.id));
+        li.querySelector('.edit-btn').addEventListener('click', () => editConnection(conn.id));
+        li.querySelector('.delete-btn').addEventListener('click', () => deleteConnection(conn.id));
+        const infoDiv = li.querySelector('.info');
+        const descDiv = li.querySelector('.desc-row');
+        infoDiv.addEventListener('click', () => {
+          if (descDiv.style.display === 'none') {
+            descDiv.textContent = conn.description || 'No description.';
+            descDiv.style.display = '';
+          } else {
+            descDiv.style.display = 'none';
+          }
+        });
+        ul.appendChild(li);
+      });
+    }
+
+    function showModal(ip='', username='', id=null, description='') {
+      document.getElementById('modal').classList.add('active');
+      document.getElementById('ip').value = ip;
+      renderUsernameDropdown(username);
+      document.getElementById('description').value = description;
+      editingId = id;
+      document.getElementById('saveBtn').textContent = id ? 'Update' : 'Save';
+    }
+    function hideModal() {
+      document.getElementById('modal').classList.remove('active');
+      document.getElementById('ip').value = '';
+      const usernameDropdown = document.getElementById('usernameDropdown');
+      if (usernameDropdown) usernameDropdown.selectedIndex = 0;
+      document.getElementById('description').value = '';
+      editingId = null;
+    }
+    function saveConnection() {
+      const form = {
+        ip: document.getElementById('ip').value,
+        username: document.getElementById('usernameDropdown').value,
+        description: document.getElementById('description').value
+      };
+      if (editingId) {
+        fetch(`/connections/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        .then(res => res.json())
+        .then(() => { hideModal(); fetchConnections(); });
+      } else {
+        fetch('/connections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        .then(res => res.json())
+        .then(() => { hideModal(); fetchConnections(); });
+      }
+    }
+
+    function showCredModal() {
+      document.getElementById('credModal').classList.add('active');
+    }
+    function hideCredModal() {
+      document.getElementById('credModal').classList.remove('active');
+      document.getElementById('credUsername').value = '';
+      document.getElementById('credPassword').value = '';
+    }
+    function saveCredentials() {
+      const username = document.getElementById('credUsername').value;
+      const password = document.getElementById('credPassword').value;
+      fetch('/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      }).then(() => {
+        hideCredModal();
+        fetchUsernames();
+      });
+    }
+
+    let editingUsername = null;
+    function editCredential(username) {
+      editingUsername = username;
+      document.getElementById('editCredTitle').textContent = `Edit Password for ${username}`;
+      document.getElementById('editCredPassword').value = '';
+      document.getElementById('editCredModal').classList.add('active');
+    }
+    function hideEditCredModal() {
+      document.getElementById('editCredModal').classList.remove('active');
+      document.getElementById('editCredPassword').value = '';
+      editingUsername = null;
+    }
+    function submitEditCredential() {
+      const newPassword = document.getElementById('editCredPassword').value;
+      if (newPassword && editingUsername) {
+        fetch(`/credentials/${encodeURIComponent(editingUsername)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: newPassword })
+        }).then(() => {
+          hideEditCredModal();
+          fetchUsernames();
+          renderCredList();
+        });
+      }
+    }
+
+    function goToCredPage() {
+      document.getElementById('mainPage').style.display = 'none';
+      document.getElementById('credPage').style.display = '';
+      renderCredList();
+    }
+    function goToMainPage() {
+      document.getElementById('credPage').style.display = 'none';
+      document.getElementById('mainPage').style.display = '';
+    }
+    function renderCredList() {
+      const ul = document.getElementById('credList');
+      ul.innerHTML = '';
+      usernames.forEach(u => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="info"><b>${u}</b></div>
+          <div class="actions">
+            <button class="edit-btn">Edit</button>
+            <button class="delete delete-btn">Delete</button>
+          </div>`;
+        li.querySelector('.edit-btn').addEventListener('click', () => editCredential(u));
+        li.querySelector('.delete-btn').addEventListener('click', () => deleteCredential(u));
+        ul.appendChild(li);
+      });
+    }
+    function deleteCredential(username) {
+      if (confirm(`Delete credentials for ${username}?`)) {
+        fetch(`/credentials/${encodeURIComponent(username)}`, {
+          method: 'DELETE'
+        }).then(() => { fetchUsernames(); renderCredList(); });
+      }
+    }
+
+    window.connect = function(id) {
+      fetch(`/connections/${id}/connect`, { method: 'POST' });
+    }
+    window.editConnection = function(id) {
+      const conn = connections.find(c => c.id === id);
+      showModal(conn.ip, conn.username, conn.id, conn.description);
+    }
+    window.deleteConnection = function(id) {
+      fetch(`/connections/${id}`, { method: 'DELETE' })
+        .then(fetchConnections);
+    }
+
+    fetchConnections();
+    fetchUsernames();
+  </script>
+</body>
+</html>
