@@ -5,7 +5,7 @@ import os
 import tempfile
 import keyring
 import time
-
+import ctypes
 
 def save_credentials(username, password):
     # Store password in Windows Credential Manager by username only
@@ -15,6 +15,28 @@ def save_credentials(username, password):
 def get_credentials(username):
     key = f"rdp_manager:{username}"
     return keyring.get_password("rdp_manager", key)
+
+def activate_window(wnd):
+    for _ in range(3):
+        try:
+            wnd.minimize()
+            wnd.restore()
+            wnd.activate()
+        except Exception as ex:
+            print(f"Failed to activate window: {ex}")
+            time.sleep(3)
+        if wnd.isActive:
+            return True
+    return False
+
+def disable_capslock():
+    # Only works on Windows
+    VK_CAPITAL = 0x14
+    # Get current state
+    caps_state = ctypes.windll.user32.GetKeyState(VK_CAPITAL)
+    if caps_state & 1:
+        # If enabled, send capslock key to disable
+        pyautogui.press('capslock')
 
 def connect_rdp_session(ip, username):
     try:
@@ -26,15 +48,17 @@ def connect_rdp_session(ip, username):
         proc = subprocess.Popen(["mstsc.exe", rdp_path])
         time.sleep(3)
        
-        rdp_windows = [w for w in gw.getWindowsWithTitle(ip) if not w.isMinimized]
+        rdp_windows = [w for w in gw.getWindowsWithTitle(ip)]
         if not rdp_windows:
-            rdp_windows = [w for w in gw.getWindowsWithTitle("Remote Desktop Connection") if not w.isMinimized]
+            rdp_windows = [w for w in gw.getWindowsWithTitle("Remote Desktop Connection")]
         if not rdp_windows:
-            rdp_windows = [w for w in gw.getWindowsWithTitle("Безопасность Windows") if not w.isMinimized]
+            rdp_windows = [w for w in gw.getWindowsWithTitle("Безопасность Windows")]
         if rdp_windows and password:
             win = rdp_windows[0]
-            win.activate()
-            time.sleep(0.5)
+            activated = activate_window(win)
+            if not activated:
+                raise Exception("window is not active somehow")
+            disable_capslock()
             pyautogui.write(password, interval=0.05)
             pyautogui.press('enter')
         else:
