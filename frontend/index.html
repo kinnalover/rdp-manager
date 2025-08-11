@@ -48,6 +48,19 @@
       <button class="close-btn" onclick="hideEditCredModal()">Cancel</button>
     </div>
   </div>
+  <div class="container" id="setPasswordPage" style="display:none;">
+    <h1>Set Application Password</h1>
+    <input type="password" id="newPassword" placeholder="New password">
+    <input type="password" id="confirmPassword" placeholder="Confirm password" style="margin-top:8px;">
+    <button class="add-btn" onclick="setAppPassword()">Set Password</button>
+    <div id="setPasswordError" style="color:#d32f2f;margin-top:12px;display:none;"></div>
+  </div>
+  <div class="container" id="passwordPage" style="display:none;">
+    <h1>Enter Application Password</h1>
+    <input type="password" id="appPassword" placeholder="Password">
+    <button class="add-btn" onclick="checkPassword()">Login</button>
+    <div id="passwordError" style="color:#d32f2f;margin-top:12px;display:none;"></div>
+  </div>
   <script>
     let connections = [];
     let editingId = null;
@@ -259,6 +272,51 @@
         .then(fetchConnections);
     }
 
+    function isPasswordSet() {
+      return !!localStorage.getItem('appPassword');
+    }
+    function showInitialPage() {
+      if (!isPasswordSet()) {
+        document.getElementById('setPasswordPage').style.display = '';
+      } else {
+        document.getElementById('passwordPage').style.display = '';
+      }
+      document.getElementById('mainPage').style.display = 'none';
+    }
+    function setAppPassword() {
+      const pw1 = document.getElementById('newPassword').value;
+      const pw2 = document.getElementById('confirmPassword').value;
+      if (!pw1 || pw1.length < 4) {
+        showSetPasswordError("Password must be at least 4 characters.");
+        return;
+      }
+      if (pw1 !== pw2) {
+        showSetPasswordError("Passwords do not match.");
+        return;
+      }
+      localStorage.setItem('appPassword', pw1);
+      document.getElementById('setPasswordPage').style.display = 'none';
+      document.getElementById('passwordPage').style.display = '';
+    }
+    function showSetPasswordError(msg) {
+      const err = document.getElementById('setPasswordError');
+      err.textContent = msg;
+      err.style.display = 'block';
+    }
+    function checkPassword() {
+      const input = document.getElementById('appPassword').value;
+      if (input === localStorage.getItem('appPassword')) {
+        document.getElementById('passwordPage').style.display = 'none';
+        document.getElementById('setPasswordPage').style.display = 'none';
+        document.getElementById('credPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = '';
+        document.getElementById('passwordError').style.display = 'none';
+      } else {
+        document.getElementById('passwordError').style.display = 'block';
+      }
+    }
+    // Show correct page on load
+    showInitialPage();
     fetchConnections();
     fetchUsernames();
   </script>
