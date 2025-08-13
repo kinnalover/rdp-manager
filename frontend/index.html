@@ -55,11 +55,13 @@
     <button class="add-btn" onclick="setAppPassword()">Set Password</button>
     <div id="setPasswordError" style="color:#d32f2f;margin-top:12px;display:none;"></div>
   </div>
-  <div class="container" id="passwordPage" style="display:none;">
-    <h1>Enter Application Password</h1>
-    <input type="password" id="appPassword" placeholder="Password">
-    <button class="add-btn" onclick="checkPassword()">Login</button>
-    <div id="passwordError" style="color:#d32f2f;margin-top:12px;display:none;"></div>
+  <div class="modal" id="appPasswordModal" style="display:none;">
+    <div class="modal-content" style="min-width:320px;max-width:90vw;">
+      <h2 style="text-align:center;">Enter Application Password</h2>
+      <input type="password" id="modalAppPassword" placeholder="Password" style="margin-bottom:12px;width:70%;display:block;margin-left:auto;margin-right:auto;" maxlength="32" oninput="autoCheckModalPassword()">
+      <button class="add-btn" id="modalLoginBtn" style="width:100%;" onclick="checkModalPassword()">Unlock</button>
+      <div id="modalPasswordError" style="color:#d32f2f;margin-top:12px;display:none;text-align:center;"></div>
+    </div>
   </div>
   <script>
     let connections = [];
@@ -278,10 +280,14 @@
     function showInitialPage() {
       if (!isPasswordSet()) {
         document.getElementById('setPasswordPage').style.display = '';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('credPage').style.display = 'none';
       } else {
-        document.getElementById('passwordPage').style.display = '';
+        showAppPasswordModal();
+        document.getElementById('setPasswordPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('credPage').style.display = 'none';
       }
-      document.getElementById('mainPage').style.display = 'none';
     }
     function setAppPassword() {
       const pw1 = document.getElementById('newPassword').value;
@@ -296,29 +302,51 @@
       }
       localStorage.setItem('appPassword', pw1);
       document.getElementById('setPasswordPage').style.display = 'none';
-      document.getElementById('passwordPage').style.display = '';
+      showAppPasswordModal();
     }
     function showSetPasswordError(msg) {
       const err = document.getElementById('setPasswordError');
       err.textContent = msg;
       err.style.display = 'block';
     }
-    function checkPassword() {
-      const input = document.getElementById('appPassword').value;
+    function checkModalPassword() {
+      const input = document.getElementById('modalAppPassword').value;
       if (input === localStorage.getItem('appPassword')) {
-        document.getElementById('passwordPage').style.display = 'none';
-        document.getElementById('setPasswordPage').style.display = 'none';
-        document.getElementById('credPage').style.display = 'none';
+        hideAppPasswordModal();
         document.getElementById('mainPage').style.display = '';
-        document.getElementById('passwordError').style.display = 'none';
+        document.getElementById('credPage').style.display = 'none';
+        document.getElementById('setPasswordPage').style.display = 'none';
+        document.getElementById('modalPasswordError').style.display = 'none';
       } else {
-        document.getElementById('passwordError').style.display = 'block';
+        document.getElementById('modalPasswordError').textContent = 'Incorrect password.';
+        document.getElementById('modalPasswordError').style.display = 'block';
       }
     }
-    // Show correct page on load
-    showInitialPage();
-    fetchConnections();
-    fetchUsernames();
+    function autoCheckModalPassword() {
+      const input = document.getElementById('modalAppPassword');
+      if (input.value.length >= 4) {
+        checkModalPassword();
+      }
+    }
+    function showAppPasswordModal() {
+      const modal = document.getElementById('appPasswordModal');
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      document.getElementById('modalAppPassword').value = '';
+      document.getElementById('modalPasswordError').style.display = 'none';
+    }
+    function hideAppPasswordModal() {
+      const modal = document.getElementById('appPasswordModal');
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showInitialPage();
+      fetchConnections();
+      fetchUsernames();
+    });
+    // ...existing code...
   </script>
 </body>
 </html>

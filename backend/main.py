@@ -1,18 +1,26 @@
+import sys
+import os
 
-from backend.util import save_credentials, get_credentials
+if getattr(sys, 'frozen', False):
+    BASE_DIR = sys._MEIPASS
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+from util import save_credentials, get_credentials
 # Endpoint to get all usernames stored in Windows Credential Manager
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from backend.util import connect_rdp_session # Assuming util is a module you have for handling RDP connections
+from util import connect_rdp_session # Assuming util is a module you have for handling RDP connections
 
 app = FastAPI()
-app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/frontend", StaticFiles(directory=os.path.join(BASE_DIR, "frontend")), name="frontend")
 
 @app.get("/")
 async def read_root():
-    return HTMLResponse(content=open('frontend/index.html').read(), status_code=200)
+    with open(os.path.join(BASE_DIR, 'frontend', 'index.html')) as f:
+        return HTMLResponse(content=f.read(), status_code=200)
 
 import json
 
@@ -169,3 +177,8 @@ async def delete_credential(username: str):
         with open(cred_file, "w") as f:
             json.dump(usernames, f)
     return {"message": "Credential deleted"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8123)
+

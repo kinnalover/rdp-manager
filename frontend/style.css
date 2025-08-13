@@ -20,9 +20,14 @@ li { background: #f8fafc; border-radius: 8px; margin-bottom: 12px; padding: 16px
 .actions .delete-btn:hover { background: linear-gradient(90deg, #d32f2f 0%, #ffb199 100%); }
 .modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); justify-content: center; align-items: center; z-index: 1000; }
 .modal.active { display: flex; }
+#appPasswordModal.modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); justify-content: center; align-items: center; z-index: 2000; }
 .modal-content { background: #fff; padding: 32px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); min-width: 320px; }
+#appPasswordModal .modal-content { background: #fff; padding: 32px; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); min-width: 320px; max-width: 90vw; }
 .modal-content input { width: 100%; margin-bottom: 16px; padding: 8px; font-size: 16px; border-radius: 8px; border: 1px solid #dbe2ea; }
+#appPasswordModal input { width: 100%; margin-bottom: 16px; padding: 8px; font-size: 16px; border-radius: 8px; border: 1px solid #dbe2ea; }
 .modal-content button { width: 100%; background: linear-gradient(90deg, #4f8cff 0%, #1cb5e0 100%); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 16px; cursor: pointer; margin-bottom: 8px; transition: background 0.2s; }
+#appPasswordModal button { width: 100%; background: linear-gradient(90deg, #4f8cff 0%, #1cb5e0 100%); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 16px; cursor: pointer; margin-bottom: 8px; transition: background 0.2s; }
 .modal-content button:hover { background: linear-gradient(90deg, #357ae8 0%, #1cb5e0 100%); }
+#appPasswordModal button:hover { background: linear-gradient(90deg, #357ae8 0%, #1cb5e0 100%); }
 .close-btn { background: #eee; color: #333; margin-top: 8px; }
 .close-btn:hover { background: #ccc; }

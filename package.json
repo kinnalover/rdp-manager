@@ -1,12 +1,56 @@
 {
   "name": "rdp_manager",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "build:win": "electron-builder --win"
   },
   "keywords": [],
-  "author": "",
+  "author": "Zhandos",
   "license": "ISC",
-  "description": ""
+  "description": "RDP manager - FastAPI + Electron desktop app",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.8.3",
+    "@electron-forge/maker-deb": "^7.8.3",
+    "@electron-forge/maker-rpm": "^7.8.3",
+    "@electron-forge/maker-squirrel": "^7.8.3",
+    "@electron-forge/maker-zip": "^7.8.3",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.3",
+    "@electron-forge/plugin-fuses": "^7.8.3",
+    "@electron/fuses": "^1.8.0",
+    "electron": "37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "build": {
+    "appId": "com.zhandos.rdpmanager",
+    "productName": "RDP Manager",
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{test,__tests__,tests}/**",
+      "!**/*.md"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "frontend/icon_app.ico"
+    },
+    "extraResources": [
+      {
+        "from": "dist/backend_server.exe",
+        "to": "backend_server.exe"
+      }
+    ]
+  }
 }
