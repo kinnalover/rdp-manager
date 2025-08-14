@@ -1,0 +1,4 @@
+fastapi[all]
+pyautogui
+keyring
+pyinstaller
