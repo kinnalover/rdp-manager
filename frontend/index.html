@@ -48,6 +48,21 @@
       <button class="close-btn" onclick="hideEditCredModal()">Cancel</button>
     </div>
   </div>
+  <div class="container" id="setPasswordPage" style="display:none;">
+    <h1>Set Application Password</h1>
+    <input type="password" id="newPassword" placeholder="New password">
+    <input type="password" id="confirmPassword" placeholder="Confirm password" style="margin-top:8px;">
+    <button class="add-btn" onclick="setAppPassword()">Set Password</button>
+    <div id="setPasswordError" style="color:#d32f2f;margin-top:12px;display:none;"></div>
+  </div>
+  <div class="modal" id="appPasswordModal" style="display:none;">
+    <div class="modal-content" style="min-width:320px;max-width:90vw;">
+      <h2 style="text-align:center;">Enter Application Password</h2>
+      <input type="password" id="modalAppPassword" placeholder="Password" style="margin-bottom:12px;width:70%;display:block;margin-left:auto;margin-right:auto;" maxlength="32" oninput="autoCheckModalPassword()">
+      <button class="add-btn" id="modalLoginBtn" style="width:100%;" onclick="checkModalPassword()">Unlock</button>
+      <div id="modalPasswordError" style="color:#d32f2f;margin-top:12px;display:none;text-align:center;"></div>
+    </div>
+  </div>
   <script>
     let connections = [];
     let editingId = null;
@@ -259,8 +274,79 @@
         .then(fetchConnections);
     }
 
-    fetchConnections();
-    fetchUsernames();
+    function isPasswordSet() {
+      return !!localStorage.getItem('appPassword');
+    }
+    function showInitialPage() {
+      if (!isPasswordSet()) {
+        document.getElementById('setPasswordPage').style.display = '';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('credPage').style.display = 'none';
+      } else {
+        showAppPasswordModal();
+        document.getElementById('setPasswordPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('credPage').style.display = 'none';
+      }
+    }
+    function setAppPassword() {
+      const pw1 = document.getElementById('newPassword').value;
+      const pw2 = document.getElementById('confirmPassword').value;
+      if (!pw1 || pw1.length < 4) {
+        showSetPasswordError("Password must be at least 4 characters.");
+        return;
+      }
+      if (pw1 !== pw2) {
+        showSetPasswordError("Passwords do not match.");
+        return;
+      }
+      localStorage.setItem('appPassword', pw1);
+      document.getElementById('setPasswordPage').style.display = 'none';
+      showAppPasswordModal();
+    }
+    function showSetPasswordError(msg) {
+      const err = document.getElementById('setPasswordError');
+      err.textContent = msg;
+      err.style.display = 'block';
+    }
+    function checkModalPassword() {
+      const input = document.getElementById('modalAppPassword').value;
+      if (input === localStorage.getItem('appPassword')) {
+        hideAppPasswordModal();
+        document.getElementById('mainPage').style.display = '';
+        document.getElementById('credPage').style.display = 'none';
+        document.getElementById('setPasswordPage').style.display = 'none';
+        document.getElementById('modalPasswordError').style.display = 'none';
+      } else {
+        document.getElementById('modalPasswordError').textContent = 'Incorrect password.';
+        document.getElementById('modalPasswordError').style.display = 'block';
+      }
+    }
+    function autoCheckModalPassword() {
+      const input = document.getElementById('modalAppPassword');
+      if (input.value.length >= 4) {
+        checkModalPassword();
+      }
+    }
+    function showAppPasswordModal() {
+      const modal = document.getElementById('appPasswordModal');
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      document.getElementById('modalAppPassword').value = '';
+      document.getElementById('modalPasswordError').style.display = 'none';
+    }
+    function hideAppPasswordModal() {
+      const modal = document.getElementById('appPasswordModal');
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showInitialPage();
+      fetchConnections();
+      fetchUsernames();
+    });
+    // ...existing code...
   </script>
 </body>
 </html>

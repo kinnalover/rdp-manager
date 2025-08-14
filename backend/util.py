@@ -59,6 +59,7 @@ def connect_rdp_session(ip, username):
             if not activated:
                 raise Exception("window is not active somehow")
             disable_capslock()
+            time.sleep(0.5)
             pyautogui.write(password, interval=0.05)
             pyautogui.press('enter')
         else:
