@@ -48,8 +48,13 @@
     },
     "extraResources": [
       {
+<<<<<<< HEAD
         "from": "dist/backend_server.exe",
         "to": "backend_server.exe"
+=======
+        "from": "dist/backend_server",
+        "to": "backend_server"
+>>>>>>> develop
       }
     ]
   }
